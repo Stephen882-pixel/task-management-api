@@ -103,5 +103,15 @@ public class TagService {
                 .collect(Collectors.toList());
     }
 
+    protected Tag getOrCreateTag(String tagName){
+        return tagRepository.findByNameIgnoreCase(tagName)
+                .orElseGet(() -> {
+                   log.info("Auto-creating tag with name: {}",tagName);
+                   Tag newTag = Tag.builder()
+                           .name(tagName)
+                           .build();
+                   return tagRepository.save(newTag);
+                });
+    }
 
 }
