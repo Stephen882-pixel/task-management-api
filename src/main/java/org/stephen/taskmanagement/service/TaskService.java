@@ -9,11 +9,13 @@ import org.stephen.taskmanagement.dto.response.CreateTaskResponseDto;
 import org.stephen.taskmanagement.entity.Tag;
 import org.stephen.taskmanagement.entity.Task;
 import org.stephen.taskmanagement.enums.TaskStatus;
+import org.stephen.taskmanagement.exception.ValidationException;
 import org.stephen.taskmanagement.mappers.TaskMapper;
 import org.stephen.taskmanagement.repository.TagRepository;
 import org.stephen.taskmanagement.repository.TaskRepository;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,18 @@ public class TaskService {
             task.setStatus(TaskStatus.valueOf(request.getStatus().toUpperCase()));
 
             Set<Tag> tags = request.getTagNames().stream()
-                    .map(tagName -> tagService.)
+                    .map(tagName -> tagService.getOrCreateTag(tagName))
+                    .collect(Collectors.toSet());
+
+            tags.forEach(task::addTag);
+            Task savedTask = taskRepository.save(task);
+            log.info("Task created successfully with id: {}", savedTask.getId());
+            return taskMapper.toResponse(savedTask);
+        } catch (IllegalArgumentException e){
+            log.error("Invalid task status provided: {}",request.getStatus());
+            throw new ValidationException("Invalid task status: " + request.getStatus());
         }
     }
+
+
 }
