@@ -9,6 +9,7 @@ import org.stephen.taskmanagement.dto.request.CreateTagRequestDto;
 import org.stephen.taskmanagement.dto.request.UpdateTagRequestDto;
 import org.stephen.taskmanagement.dto.response.CreateTaskResponseDto;
 import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
+import org.stephen.taskmanagement.dto.response.TagListResponseDto;
 import org.stephen.taskmanagement.dto.response.TasksListResponseDto;
 import org.stephen.taskmanagement.entity.Tag;
 import org.stephen.taskmanagement.entity.Task;
@@ -21,7 +22,7 @@ public interface TagMapper {
     @Mapping(target = "tasks", ignore = true)
     Tag toEntity(CreateTagRequestDto request);
 
-    TagDetailResponseDto toResponse(Tag tag);
+    TagListResponseDto toResponse(Tag tag);
 
     @Mapping(target = "taskCount", expression = "java(tag.getTasks().size())")
     @Mapping(target = "tasks", source = "tasks")

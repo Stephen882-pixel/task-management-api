@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.stephen.taskmanagement.dto.request.CreateTagRequestDto;
 import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
+import org.stephen.taskmanagement.dto.response.TagListResponseDto;
 import org.stephen.taskmanagement.entity.Tag;
 import org.stephen.taskmanagement.mappers.TagMapper;
 import org.stephen.taskmanagement.mappers.TaskMapper;
@@ -21,7 +22,7 @@ public class TagService {
     private final TaskMapper taskMapper;
     private final TagMapper tagMapper;
 
-    public TagDetailResponseDto createTag(CreateTagRequestDto request){
+    public TagListResponseDto createTag(CreateTagRequestDto request){
         log.info("Creating tag with name: {}",request.getName());
         tagRepository.findByNameIgnoreCase(request.getName())
                 .ifPresent(tag -> {
@@ -35,10 +36,20 @@ public class TagService {
     }
 
     @Transactional(readOnly = true)
-    public TagDetailResponseDto getTagById(Long id) {
+    public TagListResponseDto getTagById(Long id) {
         log.info("Fetching tag with id: {}",id);
         Tag tag = tagRepository.findByIdWithTasks(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tag","id",String.valueOf(id)));
         return tagMapper.toResponse(tag);
     }
+
+    @Transactional(readOnly = true)
+    public TagDetailResponseDto getTagDetails(Long id){
+        log.info("Fetching tag details with id: {}",id);
+        Tag tag = tagRepository.findByIdWithTasks(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tag","id",String.valueOf(id)));
+        return tagMapper.toDetailResponse(tag);
+    }
+
+
 }
