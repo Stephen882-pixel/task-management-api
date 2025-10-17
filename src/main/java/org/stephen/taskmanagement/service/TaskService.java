@@ -112,6 +112,12 @@ public class TaskService {
         log.info("Task deleted successfully with id: {}",id);
     }
 
-
+    @Transactional(readOnly = true)
+    public List<TasksListResponseDto> searchTasks(String title){
+        log.info("Searching for tasks with title containing: {}",title);
+        return taskRepository.findByTitleContainingIgnoreCase(title).stream()
+                .map(taskMapper::toListResponse)
+                .collect(Collectors.toList());
+    }
 
 }
