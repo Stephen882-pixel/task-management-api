@@ -10,12 +10,12 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class tagDetailResponseDto {
+public class TagDetailResponseDto {
     private Long id;
     private String name;
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer taskCount;
-    private Set<tasksListResponseDto> tasks;
+    private Set<TasksListResponseDto> tasks;
 }

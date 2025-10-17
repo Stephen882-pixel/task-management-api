@@ -3,13 +3,14 @@ package org.stephen.taskmanagement.dto.response;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class createTaskResponseDto {
+public class CreateTaskResponseDto {
     private Long id;
     private String title;
     private String description;
@@ -17,5 +18,5 @@ public class createTaskResponseDto {
     private LocalDateTime dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Set<TagDto.Response> tags;
+    private Set<TasksListResponseDto> tags;
 }

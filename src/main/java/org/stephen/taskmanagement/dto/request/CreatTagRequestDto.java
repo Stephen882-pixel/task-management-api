@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class creatTagRequestDto {
+public class CreatTagRequestDto {
 
     @NotBlank(message = "Tag name is required")
     @Size(min = 1, max = 100, message = "Tag name must be between 1 and 100 characters")

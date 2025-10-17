@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class tasksListResponseDto {
+public class TasksListResponseDto {
     private Long id;
     private String title;
     private String status;
