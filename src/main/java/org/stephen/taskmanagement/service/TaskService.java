@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.stephen.taskmanagement.dto.request.CreateTaskRequestDto;
 import org.stephen.taskmanagement.dto.response.CreateTaskResponseDto;
+import org.stephen.taskmanagement.dto.response.TasksListResponseDto;
 import org.stephen.taskmanagement.entity.Tag;
 import org.stephen.taskmanagement.entity.Task;
 import org.stephen.taskmanagement.enums.TaskStatus;
+import org.stephen.taskmanagement.exception.ResourceNotFoundException;
 import org.stephen.taskmanagement.exception.ValidationException;
 import org.stephen.taskmanagement.mappers.TaskMapper;
 import org.stephen.taskmanagement.repository.TagRepository;
@@ -47,6 +49,15 @@ public class TaskService {
             throw new ValidationException("Invalid task status: " + request.getStatus());
         }
     }
+
+    @Transactional(readOnly = true)
+    public CreateTaskResponseDto getTaskById(Long id){
+        log.info("Fetching task with id {}:",id);
+        Task task  = taskRepository.findByIdWithTags(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task","id",String.valueOf(id)));
+        return taskMapper.toResponse(task);
+    }
+
 
 
 }
