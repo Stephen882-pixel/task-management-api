@@ -95,4 +95,13 @@ public class TagService {
         log.info("Tag deleted successfully with id: {}", id);
     }
 
+    @Transactional(readOnly = true)
+    public List<TagListResponseDto> searchTags(String name){
+        log.info("Searching for tags with name containing: {}",name);
+        return tagRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(tagMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+
 }
