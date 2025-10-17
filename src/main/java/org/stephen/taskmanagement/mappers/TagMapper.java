@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import org.stephen.taskmanagement.dto.request.CreatTagRequestDto;
+import org.stephen.taskmanagement.dto.request.CreateTagRequestDto;
 import org.stephen.taskmanagement.dto.request.UpdateTagRequestDto;
 import org.stephen.taskmanagement.dto.response.CreateTaskResponseDto;
 import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
@@ -18,9 +19,9 @@ public interface TagMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "tasks", ignore = true)
-    Tag toEntity(CreatTagRequestDto request);
+    Tag toEntity(CreateTagRequestDto request);
 
-    CreateTaskResponseDto toResponse(Tag tag);
+    CreateTagRequestDto toResponse(Tag tag);
 
     @Mapping(target = "taskCount", expression = "java(tag.getTasks().size())")
     @Mapping(target = "tasks", source = "tasks")
