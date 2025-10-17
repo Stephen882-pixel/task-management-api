@@ -12,6 +12,9 @@ import org.stephen.taskmanagement.mappers.TagMapper;
 import org.stephen.taskmanagement.mappers.TaskMapper;
 import org.stephen.taskmanagement.repository.TagRepository;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -49,6 +52,14 @@ public class TagService {
         Tag tag = tagRepository.findByIdWithTasks(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tag","id",String.valueOf(id)));
         return tagMapper.toDetailResponse(tag);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TagListResponseDto> getAllTags(){
+        log.info("Fetching all tags");
+        return tagRepository.findAll().stream()
+                .map(tagMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
 
