@@ -33,4 +33,12 @@ public class TagService {
         log.info("Tag created successfully wih id: {}",savedTag.getId());
         return tagMapper.toResponse(savedTag);
     }
+
+    @Transactional(readOnly = true)
+    public TagDetailResponseDto getTagById(Long id) {
+        log.info("Fetching tag with id: {}",id);
+        Tag tag = tagRepository.findByIdWithTasks(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tag","id",String.valueOf(id)));
+        return tagMapper.toResponse(tag);
+    }
 }
