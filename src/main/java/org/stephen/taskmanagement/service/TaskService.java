@@ -100,5 +100,18 @@ public class TaskService {
         }
     }
 
+    public void deleteTask(Long id){
+        log.info("Deleting task with id: {}",id);
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task","id",String.valueOf(id)));
+
+        task.getTags().stream()
+                .forEach(tag -> task.removeTag(tag));
+
+        taskRepository.delete(task);
+        log.info("Task deleted successfully with id: {}",id);
+    }
+
+
 
 }
