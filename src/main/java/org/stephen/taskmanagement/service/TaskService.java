@@ -16,6 +16,7 @@ import org.stephen.taskmanagement.mappers.TaskMapper;
 import org.stephen.taskmanagement.repository.TagRepository;
 import org.stephen.taskmanagement.repository.TaskRepository;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,23 @@ public class TaskService {
         return taskMapper.toResponse(task);
     }
 
+    @Transactional(readOnly = true)
+    public List<TasksListResponseDto> getAllTasks(String status,Long tagId){
+        log.info("Fetching all tasks with status: {}, tagId: {}", status, tagId);
+
+        List<Task> tasks;
+        if(status != null){
+            tasks = taskRepository.findByStatus(TaskStatus.valueOf(status.toUpperCase()));
+        } else if(tagId != null){
+            tasks = taskRepository.findByTagId(tagId);
+        } else {
+            tasks = taskRepository.findAllWithTags();
+        }
+
+        return tasks.stream()
+                .map(taskMapper::toListResponse)
+                .collect(Collectors.toList());
+    }
 
 
 }
