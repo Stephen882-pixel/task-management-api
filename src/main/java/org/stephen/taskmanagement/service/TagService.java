@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.stephen.taskmanagement.dto.request.CreateTagRequestDto;
+import org.stephen.taskmanagement.dto.request.UpdateTagRequestDto;
 import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
 import org.stephen.taskmanagement.dto.response.TagListResponseDto;
 import org.stephen.taskmanagement.entity.Tag;
@@ -62,5 +63,36 @@ public class TagService {
                 .collect(Collectors.toList());
     }
 
+    public TagListResponseDto updateTag(Long id, UpdateTagRequestDto request) {
+        log.info("Updating tag with id: {}",id);
+        Tag tag = tagRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tag","id",String.valueOf(id)));
+
+        if(request.getName() != null && !request.getName().equals(tag.getName())){
+            tagRepository.findByNameIgnoreCase(request.getName())
+                    .ifPresent(existingTag -> {
+                        throw new DuplicateResourceException("Tag","name", request.getName());
+                    });
+        }
+
+        tagMapper.updateTagFromRequest(request,tag);
+        Tag updatedTag = tagRepository.save(tag);
+        log.info("Tag updated successfully with id: {}", id);
+        return tagMapper.toResponse(updatedTag);
+    }
+
+    public void deleteTag(Long id){
+        log.info("Deleting tag with id: {}",id);
+        Tag tag = tagRepository.findByIdWithTasks(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tag","id",String.valueOf(id)));
+
+        tag.getTasks().stream()
+                .forEach(task -> {
+                    task.removeTag(tag);
+                });
+
+        tagRepository.delete(tag);
+        log.info("Tag deleted successfully with id: {}", id);
+    }
 
 }
