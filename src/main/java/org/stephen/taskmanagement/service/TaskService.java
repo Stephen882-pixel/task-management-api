@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.stephen.taskmanagement.dto.request.CreateTaskRequestDto;
+import org.stephen.taskmanagement.dto.request.UpdateTaskRequestDto;
 import org.stephen.taskmanagement.dto.response.CreateTaskResponseDto;
 import org.stephen.taskmanagement.dto.response.TasksListResponseDto;
 import org.stephen.taskmanagement.entity.Tag;
@@ -75,6 +76,28 @@ public class TaskService {
         return tasks.stream()
                 .map(taskMapper::toListResponse)
                 .collect(Collectors.toList());
+    }
+
+    public CreateTaskResponseDto updateTask(Long id, UpdateTaskRequestDto request){
+        log.info("Updating task with id: {}",id);
+        Task task = taskRepository.findByIdWithTags(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task","id",String.valueOf(id)));
+        try{
+            taskMapper.updateTaskFromRequest(request,task);
+            if(request.getTagNames() != null && !request.getTagNames().isEmpty()){
+                task.getTags().clear();
+                Set<Tag> updateTags = request.getTagNames().stream()
+                        .map(tagName -> tagService.getOrCreateTag(tagName))
+                        .collect(Collectors.toSet());
+                updateTags.forEach(task::addTag);
+            }
+            Task updatedTask = taskRepository.save(task);
+            log.info("Task updated successfully with id: {}",updatedTask.getId());
+            return taskMapper.toResponse(updatedTask);
+        } catch (IllegalArgumentException e){
+            log.error("Invalid task status provided during update: {}",request.getStatus());
+            throw new ValidationException("Invalid task status: " + request.getStatus());
+        }
     }
 
 
