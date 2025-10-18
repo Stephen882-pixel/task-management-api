@@ -15,7 +15,9 @@ import org.stephen.taskmanagement.dto.CalendarSyncDto;
 import org.stephen.taskmanagement.service.CalendarSyncService;
 import org.stephen.taskmanagement.service.ConflictResolutionService;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/calendar")
@@ -104,5 +106,17 @@ public class CalendarSyncController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/analyze-conflict/{taskId}")
+    @Operation(summary = "Analyze sync conflict",
+            description = "Get detailed analysis of conflicts between task and calendar")
+    @ApiResponse(responseCode = "200", description = "Conflict analysis retrieved successfully")
+    @ApiResponse(responseCode = "404", description = "Task not found")
+    @ApiResponse(responseCode = "400", description = "No conflict detected")
+    public ResponseEntity<Map<String, Object>> analyzeConflict(
+            @Parameter(description = "Task ID") @PathVariable Long taskId) throws IOException {
+        log.info("GET /api/v1/calendar/analyze-conflict/{} - Analyzing conflict", taskId);
+        Map<String, Object> analysis = conflictResolutionService.analyzeConflict(taskId);
+        return ResponseEntity.ok(analysis);
+    }
 
 }
