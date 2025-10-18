@@ -41,6 +41,15 @@ public class Task {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToOne(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private CalendarEvent calendarEvent;
+
+    @Column(name = "calendar_sync_enabled")
+    private Boolean calendarSyncEnabled = true;
+
+    @Column(name = "calendar_synced_at")
+    private LocalDateTime calendarSyncedAt;
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch = FetchType.LAZY)
     @JoinTable(
             name = "task_tags",

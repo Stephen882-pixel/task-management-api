@@ -8,10 +8,14 @@ import org.stephen.taskmanagement.enums.SyncStatus;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "calendar_events", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "event_id", name = "uk_event_id")
+})
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class CalendarEvent {
 
