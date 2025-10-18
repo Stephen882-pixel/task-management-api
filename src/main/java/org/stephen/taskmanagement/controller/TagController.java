@@ -17,6 +17,8 @@ import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
 import org.stephen.taskmanagement.dto.response.TagListResponseDto;
 import org.stephen.taskmanagement.service.TagService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/tags")
 @RequiredArgsConstructor
@@ -45,5 +47,12 @@ public class TagController {
         TagDetailResponseDto response = tagService.getTagDetails(id);
         return ResponseEntity.ok(response);
     }
+
+    public ResponseEntity<List<TagListResponseDto>> getAllTags(){
+        log.info("GET /api/v1/tags - Fetching all tags");
+        List<TagListResponseDto> responses = tagService.getAllTags();
+        return ResponseEntity.ok(responses);
+    }
+
 
 }
