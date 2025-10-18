@@ -175,5 +175,29 @@ public class CalendarSyncDto {
         private LocalDateTime completedAt;
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DisableSyncRequest{
+        @NotNull(message = "Task ID is required")
+        private Long taskId;
 
+        private Boolean deleteCalendarEvent = false;
+    }
+
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SyncDisabledResponse{
+        private Long taskId;
+        private String eventId;
+        private Boolean calendarEventDeleted;
+        private LocalDateTime disabledAt;
+        private String message;
+    }
 }
