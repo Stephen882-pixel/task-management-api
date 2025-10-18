@@ -64,5 +64,16 @@ public class CalendarSyncController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/status/{taskId}")
+    @Operation(summary = "Get calendar sync status",
+            description = "Get current synchronization status and conflict information for a task")
+    @ApiResponse(responseCode = "200", description = "Sync status retrieved successfully")
+    @ApiResponse(responseCode = "404", description = "Task not found or not synced")
+    public ResponseEntity<CalendarSyncDto.SyncStatusResponse> getSyncStatus(
+            @Parameter(description = "Task ID") @PathVariable Long taskId) {
+        log.info("GET /api/v1/calendar/status/{} - Getting sync status", taskId);
+        CalendarSyncDto.SyncStatusResponse response = calendarSyncService.getSyncStatus(taskId);
+        return ResponseEntity.ok(response);
+    }
 
 }
