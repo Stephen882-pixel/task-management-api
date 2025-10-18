@@ -133,4 +133,23 @@ public class CalendarSyncDto {
         private LocalDateTime lastSyncedAt;
         private String message;
     }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SyncHistoryResponse{
+        private Long id;
+        private Long taskId;
+        private String eventId;
+        private String syncType;
+        private String syncDirection;
+        private String syncStatus;
+        private String changesApplied;
+        private String errorMessage;
+        private LocalDateTime syncedAt;
+    }
+
+
 }
