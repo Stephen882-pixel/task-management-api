@@ -36,30 +36,21 @@ public class TaskService {
     public CreateTaskResponseDto createTask(CreateTaskRequestDto request){
         log.info("Creating task with title: {}", request.getTitle());
         try{
-            // map DTO to entity
+
             Task task = taskMapper.toEntity(request);
-
-            // ensure status is set and valid; let IllegalArgumentException bubble and be handled below
             task.setStatus(TaskStatus.valueOf(request.getStatus().toUpperCase()));
-
-            // prepare tags (this may create and save tags)
             Set<Tag> tags = request.getTagNames().stream()
                     .map(tagService::getOrCreateTag)
                     .collect(Collectors.toSet());
 
-            // optionally log tag ids / names
             log.debug("Tags resolved: {}", tags.stream()
                     .map(t -> (t.getId()!=null? t.getId() : "new") + ":" + t.getName())
                     .collect(Collectors.toList()));
 
-            // attach tags to task (maintains both sides)
             tags.forEach(task::addTag);
-
-            // log the full task state before saving (helpful to reveal nulls or missing fields)
             log.debug("Saving task (pre-save) -> title: {}, status: {}, dueDate: {}, createdAt: {}, tagsCount: {}",
                     task.getTitle(), task.getStatus(), task.getDueDate(), task.getCreatedAt(), task.getTags().size());
 
-            // Save — wrap in try-catch to log the actual exception & SQL error
             Task savedTask = null;
             try {
                 savedTask = taskRepository.save(task);
@@ -70,7 +61,7 @@ public class TaskService {
                         task.getStatus(),
                         task.getTags().stream().map(Tag::getName).collect(Collectors.joining(",")),
                         e);
-                throw e; // rethrow so outer catch (or framework) still handles it
+                throw e;
             }
 
             log.info("Task created successfully with id: {}", savedTask.getId());
