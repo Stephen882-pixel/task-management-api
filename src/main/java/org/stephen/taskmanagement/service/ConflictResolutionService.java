@@ -61,7 +61,7 @@ public class ConflictResolutionService {
                 case MERGE -> resolveWithMerge(task, calendarEvent, resolvedData);
             }
 
-            // Update sync metadata
+
             calendarEvent.setConflictDetected(false);
             calendarEvent.setSyncStatus(SyncStatus.IN_SYNC);
             calendarEvent.setConflictResolutionStrategy(request.getStrategy());
@@ -71,7 +71,7 @@ public class ConflictResolutionService {
             calendarEventRepository.save(calendarEvent);
             taskRepository.save(task);
 
-            // Log resolution
+
             SyncHistory history = SyncHistory.builder()
                     .calendarEvent(calendarEvent)
                     .syncType(SyncType.MANUAL)
@@ -107,7 +107,7 @@ public class ConflictResolutionService {
                 .get(calendarEvent.getCalendarId(), calendarEvent.getEventId())
                 .execute();
 
-        // Update event with task values
+
         googleEvent.setSummary(task.getTitle());
         googleEvent.setDescription(task.getDescription());
 
@@ -171,9 +171,7 @@ public class ConflictResolutionService {
 
         Map<String, String> mergedChanges = new HashMap<>();
 
-        // Compare and merge fields
         if (!task.getTitle().equals(googleEvent.getSummary())) {
-            // Prefer the more recently modified version
             task.setTitle(googleEvent.getSummary());
             mergedChanges.put("title", "merged to: " + googleEvent.getSummary());
         }
@@ -245,10 +243,8 @@ public class ConflictResolutionService {
                 .get(calendarEvent.getCalendarId(), calendarEvent.getEventId())
                 .execute();
 
-        // Compare fields
         Map<String, Map<String, Object>> fieldComparison = new HashMap<>();
 
-        // Title
         Map<String, Object> titleComparison = new HashMap<>();
         titleComparison.put("taskValue", task.getTitle());
         titleComparison.put("calendarValue", googleEvent.getSummary());
