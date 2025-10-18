@@ -26,11 +26,11 @@ import org.stephen.taskmanagement.repository.TaskRepository;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.google.api.services.calendar.Calendar;
 
 @Service
 @RequiredArgsConstructor
