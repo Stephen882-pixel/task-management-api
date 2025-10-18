@@ -159,5 +159,10 @@ docker compose up --build  # Then run Docker
 - Google Calendar API
 - Docker & Docker Compose
 
----
+
+API Available at: http://localhost:8080
+
+API Documentation: http://localhost:8080/swagger-ui/index.html
+
+
 
