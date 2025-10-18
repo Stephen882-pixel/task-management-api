@@ -2,6 +2,7 @@ package org.stephen.taskmanagement.controller;
 
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -9,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.stephen.taskmanagement.dto.CalendarSyncDto;
 import org.stephen.taskmanagement.service.CalendarSyncService;
 import org.stephen.taskmanagement.service.ConflictResolutionService;
@@ -50,6 +48,19 @@ public class CalendarSyncController {
             @Valid @RequestBody CalendarSyncDto.DisableSyncRequest request) {
         log.info("POST /api/v1/calendar/disable - Task ID: {}", request.getTaskId());
         CalendarSyncDto.SyncDisabledResponse response = calendarSyncService.disableSync(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sync-to-calendar/{taskId}")
+    @Operation(summary = "Sync task changes to Google Calendar",
+            description = "Push task updates to the linked Google Calendar event")
+    @ApiResponse(responseCode = "200", description = "Task synced to calendar successfully")
+    @ApiResponse(responseCode = "404", description = "Task not found")
+    @ApiResponse(responseCode = "400", description = "Task not synced with calendar")
+    public ResponseEntity<CalendarSyncDto.SyncResponse> syncTaskToCalendar(
+            @Parameter(description = "Task ID") @PathVariable Long taskId) {
+        log.info("POST /api/v1/calendar/sync-to-calendar/{} - Syncing task to calendar", taskId);
+        CalendarSyncDto.SyncResponse response = calendarSyncService.syncTaskToCalendar(taskId);
         return ResponseEntity.ok(response);
     }
 
