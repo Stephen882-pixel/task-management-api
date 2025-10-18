@@ -9,6 +9,8 @@ import org.stephen.taskmanagement.dto.request.UpdateTagRequestDto;
 import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
 import org.stephen.taskmanagement.dto.response.TagListResponseDto;
 import org.stephen.taskmanagement.entity.Tag;
+import org.stephen.taskmanagement.exception.DuplicateResourceException;
+import org.stephen.taskmanagement.exception.ResourceNotFoundException;
 import org.stephen.taskmanagement.mappers.TagMapper;
 import org.stephen.taskmanagement.mappers.TaskMapper;
 import org.stephen.taskmanagement.repository.TagRepository;
