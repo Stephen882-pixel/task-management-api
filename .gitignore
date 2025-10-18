@@ -36,3 +36,7 @@ build/
 credentials.json
 src/main/resources/credentials.json
 tokens/
+
+.env
+tokens/
+logs/
