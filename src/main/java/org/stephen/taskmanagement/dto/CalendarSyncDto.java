@@ -86,4 +86,18 @@ public class CalendarSyncDto {
 
         private Map<String, Object> customResolution;
     }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ConflictResolutionResponse {
+        private Long taskId;
+        private String eventId;
+        private ConflictResolutionStrategy appliedStrategy;
+        private Map<String, Object> resolvedData;
+        private LocalDateTime resolvedAt;
+        private String message;
+    }
 }
