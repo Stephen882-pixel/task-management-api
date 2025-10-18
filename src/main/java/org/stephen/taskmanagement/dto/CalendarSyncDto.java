@@ -7,6 +7,7 @@ import org.stephen.taskmanagement.enums.SyncDirection;
 import org.stephen.taskmanagement.enums.SyncStatus;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class CalendarSyncDto {
 
@@ -56,5 +57,19 @@ public class CalendarSyncDto {
         private ConflictResolutionStrategy resolutionStrategy;
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SyncResponse{
+        private Long taskId;
+        private String eventId;
+        private SyncStatus syncStatus;
+        private Boolean conflictResolved;
+        private Map<String, Object> changesApplied;
+        private LocalDateTime syncedAt;
+        private String message;
+    }
 
 }
