@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.stephen.taskmanagement.dto.request.CreateTagRequestDto;
 import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
 import org.stephen.taskmanagement.dto.response.TagListResponseDto;
@@ -53,6 +50,14 @@ public class TagController {
         List<TagListResponseDto> responses = tagService.getAllTags();
         return ResponseEntity.ok(responses);
     }
+
+    public ResponseEntity<List<TagListResponseDto>> searchTags(
+            @Parameter(description = "Name search string") @RequestParam String name){
+        log.info("GET /api/v1/tags/search - Searching tags with name: {}", name);
+        List<TagListResponseDto> responses = tagService.searchTags(name);
+        return ResponseEntity.ok(responses);
+    }
+
 
 
 }
