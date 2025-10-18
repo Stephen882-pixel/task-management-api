@@ -100,4 +100,37 @@ public class CalendarSyncDto {
         private LocalDateTime resolvedAt;
         private String message;
     }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class GoogleEventDetails{
+        private String eventId;
+        private String summary;
+        private String description;
+        private LocalDateTime startTime;
+        private LocalDateTime endTime;
+        private String status;
+        private LocalDateTime updatedAt;
+        private String etag;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SyncStatusResponse{
+        private Long taskId;
+        private String eventId;
+        private SyncStatus syncStatus;
+        private Boolean conflictDetected;
+        private ConflictResolutionStrategy conflictResolutionStrategy;
+        private LocalDateTime taskLastModified;
+        private LocalDateTime calendarLastModified;
+        private LocalDateTime lastSyncedAt;
+        private String message;
+    }
 }
