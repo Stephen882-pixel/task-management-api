@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.stephen.taskmanagement.dto.request.CreateTagRequestDto;
+import org.stephen.taskmanagement.dto.request.UpdateTagRequestDto;
 import org.stephen.taskmanagement.dto.response.TagDetailResponseDto;
 import org.stephen.taskmanagement.dto.response.TagListResponseDto;
 import org.stephen.taskmanagement.service.TagService;
@@ -58,6 +59,14 @@ public class TagController {
         return ResponseEntity.ok(responses);
     }
 
+
+    public ResponseEntity<TagListResponseDto> updateTag(
+            @Parameter(description = "Tag ID") @PathVariable Long id,
+            @Valid @RequestBody UpdateTagRequestDto request){
+        log.info("PUT /api/v1/tags/{} - Updating tag", id);
+        TagListResponseDto response = tagService.updateTag(id, request);
+        return ResponseEntity.ok(response);
+    }
 
 
 }
