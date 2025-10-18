@@ -72,4 +72,18 @@ public class CalendarSyncDto {
         private String message;
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ConflictResolutionRequest {
+        @NotNull(message = "Task ID is required")
+        private Long taskId;
+
+        @NotNull(message = "Resolution strategy is required")
+        private ConflictResolutionStrategy strategy;
+
+        private Map<String, Object> customResolution;
+    }
 }
