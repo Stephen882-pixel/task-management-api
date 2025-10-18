@@ -41,6 +41,17 @@ public class CalendarSyncController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/disable")
+    @Operation(summary = "Disable calendar sync for a task",
+            description = "Stop synchronization and optionally delete calendar event")
+    @ApiResponse(responseCode = "200", description = "Calendar sync disabled successfully")
+    @ApiResponse(responseCode = "404", description = "Task not found")
+    public ResponseEntity<CalendarSyncDto.SyncDisabledResponse> disableSync(
+            @Valid @RequestBody CalendarSyncDto.DisableSyncRequest request) {
+        log.info("POST /api/v1/calendar/disable - Task ID: {}", request.getTaskId());
+        CalendarSyncDto.SyncDisabledResponse response = calendarSyncService.disableSync(request);
+        return ResponseEntity.ok(response);
+    }
 
 
 }
