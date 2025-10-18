@@ -18,5 +18,5 @@ public class CreateTaskResponseDto {
     private LocalDateTime dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Set<TasksListResponseDto> tags;
+    private Set<TagDetailResponseDto> tags;
 }

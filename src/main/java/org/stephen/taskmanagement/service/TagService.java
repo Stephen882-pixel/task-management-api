@@ -15,6 +15,7 @@ import org.stephen.taskmanagement.mappers.TagMapper;
 import org.stephen.taskmanagement.mappers.TaskMapper;
 import org.stephen.taskmanagement.repository.TagRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,12 +106,14 @@ public class TagService {
                 .collect(Collectors.toList());
     }
 
-    protected Tag getOrCreateTag(String tagName){
+    public Tag getOrCreateTag(String tagName){
         return tagRepository.findByNameIgnoreCase(tagName)
                 .orElseGet(() -> {
                    log.info("Auto-creating tag with name: {}",tagName);
                    Tag newTag = Tag.builder()
                            .name(tagName)
+                           .createdAt(LocalDateTime.now())
+                           .updatedAt(LocalDateTime.now())
                            .build();
                    return tagRepository.save(newTag);
                 });

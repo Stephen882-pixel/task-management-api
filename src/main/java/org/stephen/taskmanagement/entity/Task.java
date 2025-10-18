@@ -47,6 +47,7 @@ public class Task {
             joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
+    @Builder.Default
     private Set<Tag> tags = new HashSet<>();
 
     @PrePersist
