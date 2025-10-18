@@ -151,5 +151,29 @@ public class CalendarSyncDto {
         private LocalDateTime syncedAt;
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BulkSyncRequest{
+        private java.util.List<Long> taskIds;
+        private SyncDirection syncDirection;
+        private Boolean syncConflictedOnly;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BulkSyncResponse{
+        private Integer totalTasks;
+        private Integer successfulSyncs;
+        private Integer failedSyncs;
+        private java.util.List<SyncResponse> results;
+        private LocalDateTime completedAt;
+    }
+
 
 }
