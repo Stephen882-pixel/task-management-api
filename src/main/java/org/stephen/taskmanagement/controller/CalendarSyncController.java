@@ -15,6 +15,8 @@ import org.stephen.taskmanagement.dto.CalendarSyncDto;
 import org.stephen.taskmanagement.service.CalendarSyncService;
 import org.stephen.taskmanagement.service.ConflictResolutionService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/calendar")
 @RequiredArgsConstructor
@@ -75,5 +77,18 @@ public class CalendarSyncController {
         CalendarSyncDto.SyncStatusResponse response = calendarSyncService.getSyncStatus(taskId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/history/{taskId}")
+    @Operation(summary = "Get sync history",
+            description = "Retrieve synchronization history for a task")
+    @ApiResponse(responseCode = "200", description = "Sync history retrieved successfully")
+    @ApiResponse(responseCode = "404", description = "Task not found")
+    public ResponseEntity<List<CalendarSyncDto.SyncHistoryResponse>> getSyncHistory(
+            @Parameter(description = "Task ID") @PathVariable Long taskId) {
+        log.info("GET /api/v1/calendar/history/{} - Getting sync history", taskId);
+        List<CalendarSyncDto.SyncHistoryResponse> response = calendarSyncService.getSyncHistory(taskId);
+        return ResponseEntity.ok(response);
+    }
+
 
 }
