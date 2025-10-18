@@ -90,5 +90,19 @@ public class CalendarSyncController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/resolve-conflict")
+    @Operation(summary = "Resolve sync conflict",
+            description = "Resolve conflicts between task and calendar using specified strategy")
+    @ApiResponse(responseCode = "200", description = "Conflict resolved successfully")
+    @ApiResponse(responseCode = "404", description = "Task not found")
+    @ApiResponse(responseCode = "400", description = "Invalid conflict resolution request")
+    public ResponseEntity<CalendarSyncDto.ConflictResolutionResponse> resolveConflict(
+            @Valid @RequestBody CalendarSyncDto.ConflictResolutionRequest request) {
+        log.info("POST /api/v1/calendar/resolve-conflict - Task ID: {}", request.getTaskId());
+        CalendarSyncDto.ConflictResolutionResponse response =
+                conflictResolutionService.resolveConflict(request);
+        return ResponseEntity.ok(response);
+    }
+
 
 }
