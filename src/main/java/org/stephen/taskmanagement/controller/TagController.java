@@ -68,5 +68,12 @@ public class TagController {
         return ResponseEntity.ok(response);
     }
 
+    public ResponseEntity<Void> deleteTag(
+            @Parameter(description = "Tag ID") @PathVariable Long id){
+        log.info("DELETE /api/v1/tags/{} - Deleting tag", id);
+        tagService.deleteTag(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }
