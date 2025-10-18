@@ -39,5 +39,11 @@ public class TagController {
         return ResponseEntity.ok(response);
     }
 
+    public ResponseEntity<TagDetailResponseDto> getTagDetails(
+            @Parameter(description = "Tag ID") @PathVariable Long id){
+        log.info("GET /api/v1/tags/{}/details - Fetching tag details", id);
+        TagDetailResponseDto response = tagService.getTagDetails(id);
+        return ResponseEntity.ok(response);
+    }
 
 }
