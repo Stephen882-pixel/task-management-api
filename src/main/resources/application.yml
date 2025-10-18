@@ -47,3 +47,20 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
     operations-sorter: method
+
+google:
+  calendar:
+    enabled: true
+    credentials-path: credentials.json
+    primary-calendar-id: primary
+    sync-interval-minutes: 5
+    auto-sync-enabled: true
+    conflict-resolution-strategy: TASK_WINS
+    max-retries: 3
+    retry-delay-seconds: 5
+
+
+scheduling:
+  enabled: true
+  sync-cron: "0 */5 * * * ?"
+  conflict-check-cron: "0 0 * * * ?"

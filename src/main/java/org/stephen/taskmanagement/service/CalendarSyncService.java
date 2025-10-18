@@ -24,6 +24,7 @@ import org.stephen.taskmanagement.repository.SyncHistoryRepository;
 import org.stephen.taskmanagement.repository.TaskRepository;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -73,8 +74,8 @@ public class CalendarSyncService {
                     .calendarId(calendarId)
                     .eventTitle(createdEvent.getSummary())
                     .eventDescription(createdEvent.getDescription())
-                    .eventStartTime(fromGoogleDateTime(createdEvent.getStart()))
-                    .eventEndTime(fromGoogleDateTime(createdEvent.getEnd()))
+                    .eventStartTime(fromGoogleDateTime(createdEvent.getStart().getDateTime()))
+                    .eventEndTime(fromGoogleDateTime(createdEvent.getEnd().getDateTime()))
                     .syncStatus(SyncStatus.IN_SYNC)
                     .conflictDetected(false)
                     .conflictResolutionStrategy(request.getConflictResolutionStrategy())
@@ -136,8 +137,8 @@ public class CalendarSyncService {
             // Update sync metadata
             calendarEvent.setEventTitle(updatedEvent.getSummary());
             calendarEvent.setEventDescription(updatedEvent.getDescription());
-            calendarEvent.setEventStartTime(fromGoogleDateTime(updatedEvent.getStart()));
-            calendarEvent.setEventEndTime(fromGoogleDateTime(updatedEvent.getEnd()));
+            calendarEvent.setEventStartTime(fromGoogleDateTime(updatedEvent.getStart().getDateTime()));
+            calendarEvent.setEventEndTime(fromGoogleDateTime(updatedEvent.getEnd().getDateTime()));
             calendarEvent.setCalendarLastModifiedAt(LocalDateTime.now());
             calendarEvent.setLastSyncedAt(LocalDateTime.now());
             calendarEvent.setSyncStatus(SyncStatus.IN_SYNC);
@@ -415,7 +416,7 @@ public class CalendarSyncService {
 
 
         String calendarTitle = googleEvent.getSummary();
-        LocalDateTime calendarDueDate = fromGoogleDateTime(googleEvent.getStart());
+        LocalDateTime calendarDueDate = fromGoogleDateTime(googleEvent.getStart().getDateTime());
 
         boolean titleChanged = !task.getTitle().equals(calendarTitle);
         boolean dueDateChanged = !task.getDueDate().equals(calendarDueDate);
@@ -428,7 +429,7 @@ public class CalendarSyncService {
         task.setDescription(googleEvent.getDescription());
 
         if (googleEvent.getStart() != null) {
-            task.setDueDate(fromGoogleDateTime(googleEvent.getStart()));
+            task.setDueDate(fromGoogleDateTime(googleEvent.getStart().getDateTime()));
         }
 
 
@@ -443,14 +444,17 @@ public class CalendarSyncService {
         );
     }
 
-    private LocalDateTime fromGoogleDateTime(EventDateTime eventDateTime) {
-        if (eventDateTime == null || eventDateTime.getDateTime() == null) {
+    private LocalDateTime fromGoogleDateTime(com.google.api.client.util.DateTime dateTime) {
+        if (dateTime == null) {
             return null;
         }
-        return eventDateTime.getDateTime().toCalendar().toZonedDateTime()
-                .withZoneSameInstant(ZoneId.systemDefault())
+
+        return Instant.ofEpochMilli(dateTime.getValue())
+                .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
     }
+
+
 
     private void logSyncHistory(CalendarEvent calendarEvent, SyncType syncType,
                                 SyncDirection syncDirection, SyncStatus syncStatus,

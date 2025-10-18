@@ -21,10 +21,12 @@ import org.stephen.taskmanagement.repository.SyncHistoryRepository;
 import org.stephen.taskmanagement.repository.TaskRepository;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -141,13 +143,17 @@ public class ConflictResolutionService {
         task.setTitle(googleEvent.getSummary());
         task.setDescription(googleEvent.getDescription());
 
-        if (googleEvent.getStart() != null) {
-            LocalDateTime dueDate = googleEvent.getStart().getDateTime().toCalendar()
-                    .toZonedDateTime()
-                    .withZoneSameInstant(java.time.ZoneId.systemDefault())
+        if (googleEvent.getStart() != null && googleEvent.getStart().getDateTime() != null) {
+            com.google.api.client.util.DateTime startDateTime = googleEvent.getStart().getDateTime();
+
+
+            LocalDateTime dueDate = Instant.ofEpochMilli(startDateTime.getValue())
+                    .atZone(ZoneId.systemDefault())
                     .toLocalDateTime();
+
             task.setDueDate(dueDate);
         }
+
 
         resolvedData.put("strategy", "CALENDAR_WINS");
         resolvedData.put("taskTitle", task.getTitle());
@@ -178,18 +184,21 @@ public class ConflictResolutionService {
             mergedChanges.put("description", "merged to: " + googleEvent.getDescription());
         }
 
-        if (googleEvent.getStart() != null && task.getDueDate() != null) {
-            LocalDateTime calendarDueDate = googleEvent.getStart().getDateTime()
-                    .toCalendar()
-                    .toZonedDateTime()
-                    .withZoneSameInstant(java.time.ZoneId.systemDefault())
+        if (googleEvent.getStart() != null && googleEvent.getStart().getDateTime() != null && task.getDueDate() != null) {
+            com.google.api.client.util.DateTime startDateTime = googleEvent.getStart().getDateTime();
+
+
+            LocalDateTime calendarDueDate = Instant.ofEpochMilli(startDateTime.getValue())
+                    .atZone(ZoneId.systemDefault())
                     .toLocalDateTime();
+
 
             if (!task.getDueDate().equals(calendarDueDate)) {
                 task.setDueDate(calendarDueDate);
                 mergedChanges.put("dueDate", "merged to: " + calendarDueDate);
             }
         }
+
 
         resolvedData.put("strategy", "MERGE");
         resolvedData.put("mergedFields", mergedChanges);
@@ -246,23 +255,27 @@ public class ConflictResolutionService {
         titleComparison.put("conflict", !task.getTitle().equals(googleEvent.getSummary()));
         fieldComparison.put("title", titleComparison);
 
-        // Due Date
         Map<String, Object> dueDateComparison = new HashMap<>();
-        LocalDateTime calendarDueDate = googleEvent.getStart().getDateTime()
-                .clone()
-                .toZonedDateTime()
-                .withZoneSameInstant(ZoneId.systemDefault())
+
+        com.google.api.client.util.DateTime startDateTime = googleEvent.getStart().getDateTime();
+        if (startDateTime == null) {
+            startDateTime = googleEvent.getStart().getDate();
+        }
+
+
+        LocalDateTime calendarDueDate = Instant.ofEpochMilli(startDateTime.getValue())
+                .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+
         dueDateComparison.put("taskValue", task.getDueDate());
         dueDateComparison.put("calendarValue", calendarDueDate);
         dueDateComparison.put("conflict", !task.getDueDate().equals(calendarDueDate));
         fieldComparison.put("dueDate", dueDateComparison);
 
-        // Description
         Map<String, Object> descriptionComparison = new HashMap<>();
         descriptionComparison.put("taskValue", task.getDescription());
         descriptionComparison.put("calendarValue", googleEvent.getDescription());
-        descriptionComparison.put("conflict", !task.getDescription().equals(googleEvent.getDescription()));
+        descriptionComparison.put("conflict", !Objects.equals(task.getDescription(), googleEvent.getDescription()));
         fieldComparison.put("description", descriptionComparison);
 
         analysis.put("taskId", taskId);
@@ -273,5 +286,6 @@ public class ConflictResolutionService {
         analysis.put("lastSynced", calendarEvent.getLastSyncedAt());
 
         return analysis;
+
     }
 }

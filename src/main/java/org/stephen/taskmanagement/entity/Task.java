@@ -80,5 +80,13 @@ public class Task {
         tag.getTasks().remove(this);
     }
 
+    public boolean isCalendarSynced() {
+        return calendarEvent != null && calendarSyncEnabled;
+    }
+
+    public boolean hasCalendarConflict() {
+        return calendarEvent != null && calendarEvent.getConflictDetected();
+    }
+
 
 }
