@@ -119,4 +119,18 @@ public class CalendarSyncController {
         return ResponseEntity.ok(analysis);
     }
 
+    @PostMapping("/bulk-sync")
+    @Operation(summary = "Perform bulk synchronization",
+            description = "Sync multiple tasks with calendar in a single operation")
+    @ApiResponse(responseCode = "200", description = "Bulk sync completed")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    public ResponseEntity<CalendarSyncDto.BulkSyncResponse> bulkSync(
+            @Valid @RequestBody CalendarSyncDto.BulkSyncRequest request) {
+        log.info("POST /api/v1/calendar/bulk-sync - Syncing {} tasks", request.getTaskIds().size());
+        // Implementation in next iteration
+        return ResponseEntity.ok(CalendarSyncDto.BulkSyncResponse.builder()
+                .totalTasks(request.getTaskIds().size())
+                .build());
+    }
+
 }
