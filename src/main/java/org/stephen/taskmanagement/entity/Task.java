@@ -71,13 +71,25 @@ public class Task {
     }
 
     public void addTag(Tag tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("Cannot add null tag");
+        }
         this.tags.add(tag);
+
+        if (tag.getTasks() == null) {
+            tag.setTasks(new HashSet<>());
+        }
         tag.getTasks().add(this);
     }
 
     public void removeTag(Tag tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("Cannot remove null tag");
+        }
         this.tags.remove(tag);
-        tag.getTasks().remove(this);
+        if (tag.getTasks() != null) {
+            tag.getTasks().remove(this);
+        }
     }
 
     public boolean isCalendarSynced() {

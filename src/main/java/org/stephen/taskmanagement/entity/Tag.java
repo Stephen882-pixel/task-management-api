@@ -37,6 +37,9 @@ public class Tag {
 
     @PrePersist
     protected void onCreate() {
+        if (tasks == null) {
+            tasks = new HashSet<>();
+        }
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
