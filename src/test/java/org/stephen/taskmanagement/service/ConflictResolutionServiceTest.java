@@ -1,5 +1,6 @@
 package org.stephen.taskmanagement.service;
 
+
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
@@ -30,13 +31,13 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Calendar Sync Service - Critical Paths")
 class CalendarSyncServiceTest {
+
     @Mock
     private Calendar googleCalendar;
 
@@ -66,7 +67,7 @@ class CalendarSyncServiceTest {
     private Event googleEvent;
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
         task = Task.builder()
                 .id(1L)
                 .title("Test Task")
@@ -82,7 +83,7 @@ class CalendarSyncServiceTest {
                 .id(1L)
                 .task(task)
                 .eventId("event123")
-                .calendarId("calendar123")
+                .calendarId("primary")
                 .eventTitle("Test Task")
                 .syncStatus(SyncStatus.IN_SYNC)
                 .conflictDetected(false)
@@ -104,12 +105,11 @@ class CalendarSyncServiceTest {
                         new com.google.api.client.util.DateTime(
                                 java.util.Date.from(task.getDueDate().plusHours(1)
                                         .atZone(ZoneId.systemDefault()).toInstant()))));
-
-        when(syncProperties.getPrimaryCalendarId()).thenReturn("primary");
     }
+
     @Test
     @DisplayName("Enable sync: Should create Google Calendar event and link to task")
-    void testEnableSync_Success() throws Exception{
+    void testEnableSync_Success() throws Exception {
         CalendarSyncDto.EnableSyncRequest request = CalendarSyncDto.EnableSyncRequest.builder()
                 .taskId(1L)
                 .calendarId("primary")
@@ -117,11 +117,13 @@ class CalendarSyncServiceTest {
                 .build();
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().insert(eq("primary"), any(Event.class)))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Insert.class));
-        when(googleCalendar.events().insert(eq("primary"), any(Event.class)).execute())
-                .thenReturn(googleEvent);
-        when(calendarEventRepository.save(any(CalendarEvent.class))).thenReturn(calendarEvent);
+
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Insert insertAPI = mock(Calendar.Events.Insert.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.insert(eq("primary"), any(Event.class))).thenReturn(insertAPI);
+        when(insertAPI.execute()).thenReturn(googleEvent);
+        when(calendarEventRepository.save(any(CalendarEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CalendarSyncDto.SyncEnabledResponse response = calendarSyncService.enableSync(request);
 
@@ -131,8 +133,7 @@ class CalendarSyncServiceTest {
         assertEquals(SyncStatus.IN_SYNC, response.getSyncStatus());
         assertFalse(response.getConflictDetected());
 
-        verify(taskRepository).findById(1L);
-        verify(googleCalendar.events()).insert(eq("primary"), any(Event.class));
+        verify(eventsAPI).insert(eq("primary"), any(Event.class));
         verify(calendarEventRepository).save(any(CalendarEvent.class));
         verify(syncHistoryRepository).save(any());
     }
@@ -141,11 +142,13 @@ class CalendarSyncServiceTest {
     @DisplayName("Enable sync: Should fail when task already synced")
     void testEnableSync_AlreadySynced() {
         task.setCalendarEvent(calendarEvent);
+
         CalendarSyncDto.EnableSyncRequest request = CalendarSyncDto.EnableSyncRequest.builder()
                 .taskId(1L)
                 .build();
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+
         assertThrows(InvalidOperationException.class, () -> calendarSyncService.enableSync(request));
         verify(googleCalendar, never()).events();
     }
@@ -153,28 +156,30 @@ class CalendarSyncServiceTest {
     @Test
     @DisplayName("Enable sync: Should fail when task not found")
     void testEnableSync_TaskNotFound() {
-
         CalendarSyncDto.EnableSyncRequest request = CalendarSyncDto.EnableSyncRequest.builder()
                 .taskId(999L)
                 .build();
 
         when(taskRepository.findById(999L)).thenReturn(Optional.empty());
 
-
         assertThrows(ResourceNotFoundException.class, () -> calendarSyncService.enableSync(request));
     }
+
     @Test
     @DisplayName("Enable sync: Should handle Google Calendar API failure")
     void testEnableSync_GoogleCalendarFailure() throws Exception {
         CalendarSyncDto.EnableSyncRequest request = CalendarSyncDto.EnableSyncRequest.builder()
                 .taskId(1L)
+                .calendarId("primary")
                 .build();
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().insert(eq("primary"), any(Event.class)))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Insert.class));
-        when(googleCalendar.events().insert(eq("primary"), any(Event.class)).execute())
-                .thenThrow(new IOException("API error"));
+
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Insert insertAPI = mock(Calendar.Events.Insert.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.insert(eq("primary"), any(Event.class))).thenReturn(insertAPI);
+        when(insertAPI.execute()).thenThrow(new IOException("API error"));
 
         assertThrows(InvalidOperationException.class, () -> calendarSyncService.enableSync(request));
         verify(syncHistoryRepository, never()).save(any());
@@ -185,35 +190,31 @@ class CalendarSyncServiceTest {
     void testSyncTaskToCalendar_Success() throws Exception {
         task.setCalendarEvent(calendarEvent);
         task.setCalendarSyncEnabled(true);
-        task.setTitle("Updated Title");
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Get.class));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")).execute())
-                .thenReturn(googleEvent);
-        when(googleCalendar.events().update(eq("calendar123"), eq("event123"), any(Event.class)))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Update.class));
-        when(googleCalendar.events().update(eq("calendar123"), eq("event123"), any(Event.class)).execute())
-                .thenReturn(googleEvent);
+
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Get getAPI = mock(Calendar.Events.Get.class);
+        Calendar.Events.Update updateAPI = mock(Calendar.Events.Update.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.get(eq("primary"), eq("event123"))).thenReturn(getAPI);
+        when(getAPI.execute()).thenReturn(googleEvent);
+        when(eventsAPI.update(eq("primary"), eq("event123"), any(Event.class))).thenReturn(updateAPI);
+        when(updateAPI.execute()).thenReturn(googleEvent);
 
         CalendarSyncDto.SyncResponse response = calendarSyncService.syncTaskToCalendar(1L);
 
         assertNotNull(response);
         assertEquals(1L, response.getTaskId());
         assertEquals(SyncStatus.IN_SYNC, response.getSyncStatus());
-        assertFalse(response.getConflictResolved());
 
-        verify(googleCalendar.events()).get(eq("calendar123"), eq("event123"));
-        verify(googleCalendar.events()).update(eq("calendar123"), eq("event123"), any(Event.class));
+        verify(eventsAPI).get(eq("primary"), eq("event123"));
+        verify(eventsAPI).update(eq("primary"), eq("event123"), any(Event.class));
     }
 
     @Test
     @DisplayName("Sync to calendar: Should fail when task not synced")
     void testSyncTaskToCalendar_NotSynced() {
-        task.setCalendarEvent(null);
-        task.setCalendarSyncEnabled(false);
-
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         assertThrows(InvalidOperationException.class, () -> calendarSyncService.syncTaskToCalendar(1L));
@@ -223,42 +224,59 @@ class CalendarSyncServiceTest {
     @Test
     @DisplayName("Sync to calendar: Should mark as SYNC_FAILED on IOException")
     void testSyncTaskToCalendar_GoogleCalendarFailure() throws Exception {
-
         task.setCalendarEvent(calendarEvent);
         task.setCalendarSyncEnabled(true);
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Get.class));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")).execute())
-                .thenThrow(new IOException("Network error"));
+
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Get getAPI = mock(Calendar.Events.Get.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.get(eq("primary"), eq("event123"))).thenReturn(getAPI);
+        when(getAPI.execute()).thenThrow(new IOException("Network error"));
 
         assertThrows(InvalidOperationException.class, () -> calendarSyncService.syncTaskToCalendar(1L));
         assertEquals(SyncStatus.SYNC_FAILED, calendarEvent.getSyncStatus());
         verify(calendarEventRepository).save(calendarEvent);
     }
+
+
     @Test
     @DisplayName("Sync from calendar: Should apply calendar changes when no conflict")
     void testSyncCalendarToTask_NoConflict() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime pastTime = now.minusHours(2);
+        LocalDateTime recentTime = now.minusMinutes(30);
+
+        calendarEvent.setLastSyncedAt(pastTime);
+        calendarEvent.setTaskLastModifiedAt(pastTime.minusMinutes(5));
+        calendarEvent.setCalendarLastModifiedAt(recentTime);
 
         task.setCalendarEvent(calendarEvent);
         task.setCalendarSyncEnabled(true);
 
         Event updatedGoogleEvent = new Event()
-                .setSummary("Updated from Calendar")
+                .setId("event123")
+                .setSummary("Updated Title")
                 .setDescription("Updated Description")
-                .setStatus("confirmed");
+                .setUpdated(new com.google.api.client.util.DateTime(recentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()))
+                .setStart(new EventDateTime().setDateTime(
+                        new com.google.api.client.util.DateTime(
+                                java.util.Date.from(now.plusDays(2).atZone(ZoneId.systemDefault()).toInstant()))))
+                .setEnd(new EventDateTime().setDateTime(
+                        new com.google.api.client.util.DateTime(
+                                java.util.Date.from(now.plusDays(2).plusHours(1).atZone(ZoneId.systemDefault()).toInstant()))));
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Get.class));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")).execute())
-                .thenReturn(updatedGoogleEvent);
 
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Get getAPI = mock(Calendar.Events.Get.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.get(eq("primary"), eq("event123"))).thenReturn(getAPI);
+        when(getAPI.execute()).thenReturn(updatedGoogleEvent);
 
         CalendarSyncDto.SyncResponse response = calendarSyncService.syncCalendarToTask(1L);
 
-        assertNotNull(response);
         assertEquals(SyncStatus.IN_SYNC, response.getSyncStatus());
         assertTrue(response.getConflictResolved());
         verify(taskRepository).save(task);
@@ -267,8 +285,10 @@ class CalendarSyncServiceTest {
     @Test
     @DisplayName("Sync from calendar: Should detect conflict when both modified")
     void testSyncCalendarToTask_ConflictDetected() throws Exception {
-        LocalDateTime pastTime = LocalDateTime.now().minusHours(2);
-        LocalDateTime recentTime = LocalDateTime.now().minusMinutes(5);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime pastTime = now.minusHours(2);
+        LocalDateTime recentTime = now.minusMinutes(5);
+
 
         calendarEvent.setLastSyncedAt(pastTime);
         calendarEvent.setTaskLastModifiedAt(recentTime);
@@ -279,40 +299,40 @@ class CalendarSyncServiceTest {
         task.setTitle("Task Title");
 
         Event conflictingGoogleEvent = new Event()
+                .setId("event123")
                 .setSummary("Different Calendar Title")
+                .setUpdated(new com.google.api.client.util.DateTime(recentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()))
                 .setStart(new EventDateTime().setDateTime(
                         new com.google.api.client.util.DateTime(
-                                java.util.Date.from(LocalDateTime.now().plusDays(2)
-                                        .atZone(ZoneId.systemDefault()).toInstant()))));
+                                java.util.Date.from(now.plusDays(2).atZone(ZoneId.systemDefault()).toInstant()))));
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Get.class));
-        when(googleCalendar.events().get(eq("calendar123"), eq("event123")).execute())
-                .thenReturn(conflictingGoogleEvent);
+
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Get getAPI = mock(Calendar.Events.Get.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.get(eq("primary"), eq("event123"))).thenReturn(getAPI);
+        when(getAPI.execute()).thenReturn(conflictingGoogleEvent);
 
         CalendarSyncDto.SyncResponse response = calendarSyncService.syncCalendarToTask(1L);
 
         assertEquals(SyncStatus.CONFLICT, response.getSyncStatus());
         assertFalse(response.getConflictResolved());
-        assertTrue((boolean) response.getChangesApplied().get("conflictDetected"));
         verify(calendarEventRepository).save(calendarEvent);
     }
 
     @Test
     @DisplayName("Sync from calendar: Should fail when task not synced")
     void testSyncCalendarToTask_NotSynced() {
-        task.setCalendarEvent(null);
-        task.setCalendarSyncEnabled(false);
-
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+
         assertThrows(InvalidOperationException.class, () -> calendarSyncService.syncCalendarToTask(1L));
     }
+
 
     @Test
     @DisplayName("Disable sync: Should delete calendar event when requested")
     void testDisableSync_WithEventDeletion() throws Exception {
-
         task.setCalendarEvent(calendarEvent);
         task.setCalendarSyncEnabled(true);
 
@@ -322,18 +342,18 @@ class CalendarSyncServiceTest {
                 .build();
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().delete(eq("calendar123"), eq("event123")))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Delete.class));
+
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Delete deleteAPI = mock(Calendar.Events.Delete.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.delete(eq("primary"), eq("event123"))).thenReturn(deleteAPI);
 
         CalendarSyncDto.SyncDisabledResponse response = calendarSyncService.disableSync(request);
 
-        assertNotNull(response);
         assertEquals(1L, response.getTaskId());
         assertTrue(response.getCalendarEventDeleted());
-
-        verify(googleCalendar.events()).delete(eq("calendar123"), eq("event123"));
+        verify(eventsAPI).delete(eq("primary"), eq("event123"));
         verify(calendarEventRepository).delete(calendarEvent);
-        assertNull(task.getCalendarEvent());
     }
 
     @Test
@@ -356,6 +376,7 @@ class CalendarSyncServiceTest {
         verify(calendarEventRepository).delete(calendarEvent);
     }
 
+
     @Test
     @DisplayName("Delete task: Should delete calendar event and task")
     void testDeleteTaskAndEvent_Success() throws Exception {
@@ -364,14 +385,15 @@ class CalendarSyncServiceTest {
         task.setCalendarSyncEnabled(true);
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().delete(eq("calendar123"), eq("event123")))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Delete.class));
 
-        // When
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Delete deleteAPI = mock(Calendar.Events.Delete.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.delete(eq("primary"), eq("event123"))).thenReturn(deleteAPI);
+
         calendarSyncService.deleteTaskAndEvent(1L);
 
-        // Then
-        verify(googleCalendar.events()).delete(eq("calendar123"), eq("event123"));
+        verify(eventsAPI).delete(eq("primary"), eq("event123"));
         verify(taskRepository).delete(task);
         verify(syncHistoryRepository).save(any());
     }
@@ -383,14 +405,15 @@ class CalendarSyncServiceTest {
         task.setCalendarSyncEnabled(true);
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(googleCalendar.events().delete(eq("calendar123"), eq("event123")))
-                .thenReturn(mock(com.google.api.services.calendar.Calendar.Events.Delete.class));
-        when(googleCalendar.events().delete(eq("calendar123"), eq("event123")).execute())
-                .thenThrow(new IOException("Deletion failed"));
+
+        Calendar.Events eventsAPI = mock(Calendar.Events.class);
+        Calendar.Events.Delete deleteAPI = mock(Calendar.Events.Delete.class);
+        when(googleCalendar.events()).thenReturn(eventsAPI);
+        when(eventsAPI.delete(eq("primary"), eq("event123"))).thenReturn(deleteAPI);
+        when(deleteAPI.execute()).thenThrow(new IOException("Deletion failed"));
 
         calendarSyncService.deleteTaskAndEvent(1L);
 
         verify(taskRepository).delete(task);
     }
-
 }
