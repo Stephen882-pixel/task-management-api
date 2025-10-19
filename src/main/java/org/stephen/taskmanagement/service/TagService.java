@@ -16,6 +16,7 @@ import org.stephen.taskmanagement.mappers.TaskMapper;
 import org.stephen.taskmanagement.repository.TagRepository;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -112,6 +113,7 @@ public class TagService {
                    log.info("Auto-creating tag with name: {}",tagName);
                    Tag newTag = Tag.builder()
                            .name(tagName)
+                           .tasks(new HashSet<>())
                            .createdAt(LocalDateTime.now())
                            .updatedAt(LocalDateTime.now())
                            .build();
