@@ -162,7 +162,7 @@ docker compose up --build  # Then run Docker
 
 API Available at: http://localhost:8080
 
-API Documentation: http://localhost:8080/swagger-ui/index.html
+API Documentation:    http://localhost:8080/swagger-ui/index.html
 
 
 
